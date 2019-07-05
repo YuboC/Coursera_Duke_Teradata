@@ -25,6 +25,14 @@ FROM trnsact
 GROUP BY trnsact.saledate
 ORDER BY total_purchases DESC;
 -- 04/12/18
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT TOP 10 saledate, SUM(amt) AS tot_sales
+FROM trnsact
+WHERE stype='P'
+GROUP BY saledate
+ORDER BY tot_sales DESC
 
 —————————————
 -Q4:
@@ -56,6 +64,13 @@ FROM
 JOIN deptinfo
 ON T.dept = deptinfo.dept;
 -- INVEST, POLOMEN, BRIOSO
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT TOP 3 s.dept, d.deptdesc, COUNT(DISTINCT s.sku) AS numskus
+FROM skuinfo s JOIN deptinfo d
+ON s.dept=d.dept
+GROUP BY s.dept, d.deptde
 
 —————————————
 -Q5:
@@ -101,6 +116,13 @@ LEFT OUTER JOIN skuinfo
 ON  skstinfo.sku = skuinfo.sku
 WHERE skuinfo.sku IS NULL;
 -- 0
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT COUNT(DISTINCT st.sku)
+FROM skstinfo st LEFT JOIN skuinfo si
+ON st.sku=si.sku
+WHERE si.sku IS NULL
 
 —————————————
 -Q7:
@@ -121,6 +143,13 @@ FROM
 	WHERE trnsact.stype = 'P' AND trnsact.sprice <> 0
 	GROUP BY saledate) AS T;
 -- 1.53M
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT SUM(amt-(cost*quantity))/ COUNT(DISTINCT saledate) AS avg_sales
+FROM trnsact t JOIN skstinfo si
+ON t.sku=si.sku AND t.store=si.store
+WHERE stype='P';
 
 —————————————
 -Q8:
@@ -137,6 +166,12 @@ GROUP BY state
 WHERE state = 'NC';
 -- 16 339511 36151
 -- 16 MSAs, lowest population of 339,511, highest income level of $36,151
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT COUNT(store), MIN(msa_pop), MAX(msa_income)
+FROM store_msa
+WHERE state='NC'
 
 —————————————
 -Q9:
@@ -163,6 +198,17 @@ ON skuinfo.sku = trnsact.sku
 GROUP BY deptinfo.dept, skuinfo.color, skuinfo.style, skuinfo.brand
 ORDER BY total_sales DESC;
 -- 800 6438658.07 DDML 6142 CLINIQUE 
+-----
+--Correct feedback:
+--Clinique’s “Dramatically Different Moisturizing 
+--Lotion” brought in the most revenue (the information that refers to 
+--that is in the “color” column).  You might have used a query like this 
+--for your answer:
+SELECT TOP 20 d.deptdesc, s.dept, s.brand, s.style, s.color, SUM(t.AMT) AS tot_sales
+FROM trnsact t, skuinfo s, deptinfo d
+WHERE t.sku=s.sku AND s.dept=d.dept AND t.stype='P'
+GROUP BY d.deptdesc, s.dept, s.brand, s.style, s.color
+ORDER BY tot_sales DESC
 
 —————————————
 -Q10:
@@ -184,6 +230,13 @@ FROM
 	GROUP BY strinfo.store
 	HAVING COUNT(DISTINCT skstinfo.sku) > 180000) AS T;
 -- 12
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT COUNT(DISTINCT sku) AS numskus
+FROM skstinfo
+GROUP BY store
+HAVING numskus > 180000;
 
 —————————————
 -Q11
@@ -214,6 +267,14 @@ WHERE deptinfo.deptdesc = 'cop'
      AND skuinfo.brand = 'federal' 
      AND skuinfo.color = 'rinse wash'  ;
 -- size and style are different
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT DISTINCT s.sku, s.dept, s.style, s.color, s.size, s.vendor, s.brand, s.packsize, d.deptdesc, st.retail, st.cost
+FROM skuinfo s JOIN deptinfo d
+ON s.dept= d.dept JOIN skstinfo st
+ON s.sku=st.sku
+WHERE d.deptdesc='cop' AND s.brand='federal' AND s.color='rinse wash';
 
 —————————————
 -Q12
@@ -251,11 +312,21 @@ SELECT strinfo.city, strinfo.state, T.total_sales
 FROM 
 	(SELECT trnsact.store AS store, SUM(trnsact.amt) AS total_sales
 	FROM trnsact
+	WHERE trnsact.stype = 'P'
 	GROUP BY trnsact.store) AS T
 JOIN strinfo
 ON strinfo.store  = T.store
 ORDER BY T.total_sales DESC;
 -- METAIRIE LA 27058653.42
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT TOP 10 t.store, s.city, s.state, SUM(amt) AS tot_sales
+FROM trnsact t JOIN strinfo s
+ON t.store=s.store
+WHERE stype='P'
+GROUP BY t.store, s.state, s.city
+ORDER BY tot_sales DESC
 
 —————————————
 -Q14
@@ -271,7 +342,14 @@ FROM ( SELECT state, COUNT(DISTINCT store) AS num
        FROM strinfo
        GROUP BY state
        HAVING num > 10) AS states_name;
-       
+-----
+--Correct feedback: 
+--You might have used a query like this for your answer:
+SELECT COUNT(*) AS numstores
+FROM strinfo
+GROUP BY state
+HAVING numstores>10
+
 ----------
 -Q16 
 --What is the suggested retail price of all the skus in the “reebok” 
@@ -281,7 +359,7 @@ FROM deptinfo d JOIN skuinfo s ON d.dept = s.dept
                 JOIN skstinfo sk ON sk.sku=s.sku
 GROUP BY sk.retail, d.deptdesc, s.brand, s.color
 HAVING d.deptdesc='reebok' AND s.brand='skechers' AND s.color='wht/saphire'
-****
+-----
 SELECT skuinfo.sku, skstinfo.retail
 FROM skuinfo
 JOIN skstinfo
